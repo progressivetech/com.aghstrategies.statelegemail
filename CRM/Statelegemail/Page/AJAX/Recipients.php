@@ -15,8 +15,8 @@ class CRM_Statelegemail_Page_AJAX_Recipients extends CRM_Core_Page {
     $addressValues = array(
       'Postal_Code_Field' => CRM_Utils_Request::retrieve('zip', 'Int'),
       'State_Province_Field' => CRM_Utils_Request::retrieve('state', 'Int'),
-      'City_Field' => CRM_Utils_Request::retrieve('city', 'Int'),
-      'Street_Address_Field' => CRM_Utils_Request::retrieve('address', 'Int'),
+      'City_Field' => CRM_Utils_Request::retrieve('city', 'String'),
+      'Street_Address_Field' => CRM_Utils_Request::retrieve('address', 'String'),
     );
 
     foreach ($addressValues as $val) {

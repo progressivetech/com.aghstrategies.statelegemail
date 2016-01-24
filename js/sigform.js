@@ -19,9 +19,9 @@ CRM.$(function($) {
       $.getJSON(CRM.url('civicrm/statelegemail/ajax/recipients'),
         {
           zip: $(zip).val().substring(0,5),
-          state: !$(stateProvince).val(),
-          city: !$(city).val(),
-          address: !$(address).val(),
+          state: $(stateProvince).val(),
+          city: $(city).val(),
+          address: $(address).val(),
         },
         function(data) {
           var names = [];
@@ -29,7 +29,7 @@ CRM.$(function($) {
             names.push(value.name);
             // TODO: handle photourl.
           })
-          newsList.html('<div class="label"><label>Recipients</label></div><div class="content">Your letter will be delivered to the following legislators: '+names.join(', ')+'</div><div class="clear"></div>');
+          legList.html('<div class="label"><label>Recipients</label></div><div class="content">Your letter will be delivered to the following legislators: '+names.join(', ')+'</div><div class="clear"></div>');
         }
       );
     } else {

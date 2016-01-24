@@ -40,7 +40,7 @@ class CRM_Petitionemail_Interface_Statelegemail extends CRM_Petitionemail_Interf
     parent::__construct($surveyId);
 
     $this->neededFields[] = 'Subject';
-    $this->neededFields += $this->addressFields;
+    $this->neededFields = array_merge($this->neededFields, $this->addressFields);
 
     $fields = $this->findFields();
     $petitionemailval = $this->getFieldsData($surveyId);
@@ -188,13 +188,13 @@ class CRM_Petitionemail_Interface_Statelegemail extends CRM_Petitionemail_Interf
    */
   public static function findRecipients($addressValues) {
     // Get api key setting.
-    $apiKey = $this->getApiKey();
+    $apiKey = self::getApiKey();
     if (empty($apiKey)) {
       // TODO: provide some better notice.
       return array();
     }
 
-    $stateConfig = $this->getStateConfig($addressValues['State_Province_Field']);
+    $stateConfig = self::getStateConfig($addressValues['State_Province_Field']);
     if (empty($stateConfig)) {
       return array();
     }
@@ -230,12 +230,12 @@ class CRM_Petitionemail_Interface_Statelegemail extends CRM_Petitionemail_Interf
     }
 
     // Now that we have the lat/long, look up the params.
-    $query = "http://openstates.org/api/v1/legislators/geo/?lat={$values['geo_code_1']}&long={$values['geo_code_2']}&apikey={$apiKey}";
+    $query = "http://openstates.org/api/v1/legislators/geo/?lat={$params['geo_code_1']}&long={$params['geo_code_2']}&apikey={$apiKey}";
     require_once 'HTTP/Request.php';
     $request = new HTTP_Request($query);
     $request->sendRequest();
     $string = $request->getResponseBody();
-    $legislators = json_decode($string);
+    $legislators = json_decode($string, TRUE);
 
     $return = array();
     foreach ($legislators as $result) {
@@ -243,11 +243,11 @@ class CRM_Petitionemail_Interface_Statelegemail extends CRM_Petitionemail_Interf
         continue;
       }
       if (!empty($result['state']) && !empty($result['chamber'])) {
-        if (empty($stateConfig[$result['state']]['titles'][$result['chamber']])) {
+        if (empty($stateConfig['titles'][$result['chamber']])) {
           $displayName = $result['full_name'];
         }
         else {
-          $displayName = "{$stateConfig[$result['state']]['titles'][$result['chamber']]} {$result['full_name']}";
+          $displayName = "{$stateConfig['titles'][$result['chamber']]} {$result['full_name']}";
         }
       }
       $return[] = array(
@@ -269,7 +269,7 @@ class CRM_Petitionemail_Interface_Statelegemail extends CRM_Petitionemail_Interf
    * @return array
    *   The configuration from Sunlight.
    */
-  private function getStateConfig($stateProvinceId) {
+  private static function getStateConfig($stateProvinceId) {
     $stateProvinceId = intval($stateProvinceId);
 
     // Find the state abbreviation from ID.
@@ -279,12 +279,13 @@ class CRM_Petitionemail_Interface_Statelegemail extends CRM_Petitionemail_Interf
         'country_id' => 1228,
         'context' => "abbreviate",
       ));
-      if (empty($states[$stateProvinceId])) {
+      if (empty($states['values'][$stateProvinceId])) {
         return FALSE;
       }
-      $state = strtolower($states[$stateProvinceId]);
+      $state = strtolower($states['values'][$stateProvinceId]);
     }
     catch (CiviCRM_API3_Exception $e) {
+      print_r($e);
       $error = $e->getMessage();
       CRM_Core_Error::debug_log_message(t('API Error: %1', array(1 => $error, 'domain' => 'com.aghstrategies.statelegemail')));
     }
@@ -303,7 +304,7 @@ class CRM_Petitionemail_Interface_Statelegemail extends CRM_Petitionemail_Interf
 
     if (empty($stateConfig[$state])) {
       // Need to go look it up. First, Get api key setting.
-      $apiKey = $this->getApiKey();
+      $apiKey = self::getApiKey();
       if (empty($apiKey)) {
         return FALSE;
       }
@@ -313,7 +314,7 @@ class CRM_Petitionemail_Interface_Statelegemail extends CRM_Petitionemail_Interf
       $request = new HTTP_Request($query);
       $request->sendRequest();
       $string = $request->getResponseBody();
-      $stateInfo = json_decode($string);
+      $stateInfo = json_decode($string, TRUE);
 
       // Go through state info and set titles.
       if (empty($stateInfo['chambers'])) {
@@ -348,19 +349,16 @@ class CRM_Petitionemail_Interface_Statelegemail extends CRM_Petitionemail_Interf
    *   The key.
    */
   private function getApiKey() {
-    if (empty($this->apiKey)) {
-      try {
-        $this->apiKey = civicrm_api3('Setting', 'getvalue', array(
-          'name' => 'statelegemail_key',
-          'group' => 'State Legislators Email Preferences',
-        ));
-      }
-      catch (CiviCRM_API3_Exception $e) {
-        $error = $e->getMessage();
-        CRM_Core_Error::debug_log_message(t('API Error: %1', array(1 => $error, 'domain' => 'com.aghstrategies.statelegemail')));
-      }
+    try {
+      return civicrm_api3('Setting', 'getvalue', array(
+        'name' => 'statelegemail_key',
+        'group' => 'State Legislators Email Preferences',
+      ));
     }
-    return $this->apiKey;
+    catch (CiviCRM_API3_Exception $e) {
+      $error = $e->getMessage();
+      CRM_Core_Error::debug_log_message(t('API Error: %1', array(1 => $error, 'domain' => 'com.aghstrategies.statelegemail')));
+    }
   }
 
 }
