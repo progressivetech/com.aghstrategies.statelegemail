@@ -24,12 +24,24 @@ CRM.$(function($) {
           address: $(address).val(),
         },
         function(data) {
-          var names = [];
+          var legLabel = $('<div/>', {
+            class: 'label',
+            html: '<label>Recipients</label>',
+          });
+          var legContent = $('<div/>', {
+            class: 'content',
+            html: 'Your letter will be delivered to the following legislators: ',
+          });
+          var legClear = $('<div/>', {
+            class: 'clear',
+          });
           $.each(data, function(index, value) {
-            names.push(value.name);
-            // TODO: handle photourl.
-          })
-          legList.html('<div class="label"><label>Recipients</label></div><div class="content">Your letter will be delivered to the following legislators: '+names.join(', ')+'</div><div class="clear"></div>');
+            var legRow = $('<div/>', {
+              html: value.name,
+            });
+            legContent.append(legRow);
+          });
+          legList.html([legLabel, legContent, legClear]);
         }
       );
     } else {
