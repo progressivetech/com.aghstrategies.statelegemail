@@ -113,7 +113,7 @@ class CRM_Petitionemail_Interface_Statelegemail extends CRM_Petitionemail_Interf
       else {
         CRM_Core_Session::setStatus(
           ts('Message sent successfully to %1', array('domain' => 'com.aghstrategies.petitionemail', 1 => $mailParams['toName'])),
-          ts('Thank you', array('domain' => 'com.aghstrategies.petitionemail')),
+          NULL,
           'success'
         );
       }
