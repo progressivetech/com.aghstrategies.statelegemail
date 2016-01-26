@@ -25,7 +25,7 @@ function statelegemail_civicrm_buildForm($formName, &$form) {
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_navigationMenu
  */
 function statelegemail_civicrm_navigationMenu(&$menu) {
-  _statelegemail_civix_insert_navigation_menu($menu, NULL, array(
+  _statelegemail_civix_insert_navigation_menu($menu, 'civicrm/petition/add', array(
     'label' => ts('State Legislators Email Settings', array('domain' => 'com.aghstrategies.statelegemail')),
     'name' => 'statelegemail_settings',
     'url' => 'civicrm/statelegemail/settings',
