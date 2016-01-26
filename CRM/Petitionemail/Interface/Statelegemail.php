@@ -89,7 +89,7 @@ class CRM_Petitionemail_Interface_Statelegemail extends CRM_Petitionemail_Interf
       $mailParams = array(
         'groupName' => 'Activity Email Sender',
         'from' => $this->getSenderLine($form->_contactId),
-        'toName' => empty($recipient['recipient']) ? $recipient['name'] : $recipient['toname'],
+        'toName' => $recipient['name'],
         'toEmail' => $recipient['email'],
         'subject' => $this->petitionEmailVal[$this->fields['Subject']],
         // 'cc' => $cc, TODO: offer option to CC.
@@ -99,10 +99,18 @@ class CRM_Petitionemail_Interface_Statelegemail extends CRM_Petitionemail_Interf
       );
 
       if (!CRM_Utils_Mail::send($mailParams)) {
-        CRM_Core_Session::setStatus(ts('Error sending message to %1', array('domain' => 'com.aghstrategies.petitionemail', 1 => $mailParams['toName'])));
+        CRM_Core_Session::setStatus(
+          ts('Error sending message to %1', array('domain' => 'com.aghstrategies.petitionemail', 1 => $mailParams['toName'])),
+          ts('Delivery error', array('domain' => 'com.aghstrategies.petitionemail')),
+          'error'
+        );
       }
       else {
-        CRM_Core_Session::setStatus(ts('Message sent successfully to %1', array('domain' => 'com.aghstrategies.petitionemail', 1 => $mailParams['toName'])));
+        CRM_Core_Session::setStatus(
+          ts('Message sent successfully to %1', array('domain' => 'com.aghstrategies.petitionemail', 1 => $mailParams['toName'])),
+          ts('Thank you', array('domain' => 'com.aghstrategies.petitionemail')),
+          'success'
+        );
       }
     }
     parent::processSignature($form);
@@ -187,6 +195,10 @@ class CRM_Petitionemail_Interface_Statelegemail extends CRM_Petitionemail_Interf
    *   - name.
    */
   public static function findRecipients($addressValues) {
+    if (!self::getValidStates($addressValues['State_Province_Field'])) {
+      return array();
+    }
+
     // Get api key setting.
     $apiKey = self::getApiKey();
     if (empty($apiKey)) {
@@ -348,7 +360,7 @@ class CRM_Petitionemail_Interface_Statelegemail extends CRM_Petitionemail_Interf
    * @return string
    *   The key.
    */
-  private function getApiKey() {
+  public static function getApiKey() {
     try {
       return civicrm_api3('Setting', 'getvalue', array(
         'name' => 'statelegemail_key',
@@ -358,6 +370,34 @@ class CRM_Petitionemail_Interface_Statelegemail extends CRM_Petitionemail_Interf
     catch (CiviCRM_API3_Exception $e) {
       $error = $e->getMessage();
       CRM_Core_Error::debug_log_message(t('API Error: %1', array(1 => $error, 'domain' => 'com.aghstrategies.statelegemail')));
+    }
+  }
+
+  /**
+   * Check if a state is enabled (or return the list of valid states).
+   *
+   * @param int $stateId
+   *   The ID of a state to check.
+   *
+   * @return mixed
+   *   TRUE/FALSE if stateId is sent, an array of valid states otherwise.
+   */
+  public static function getValidStates($stateId = NULL) {
+    try {
+      $states = civicrm_api3('Setting', 'getvalue', array(
+        'name' => 'statelegemail_states',
+        'group' => 'State Legislators Email Preferences',
+      ));
+    }
+    catch (CiviCRM_API3_Exception $e) {
+      $error = $e->getMessage();
+      CRM_Core_Error::debug_log_message(t('API Error: %1', array(1 => $error, 'domain' => 'com.aghstrategies.statelegemail')));
+    }
+    if (empty($states)) {
+      return ($stateId) ? TRUE : array();
+    }
+    else {
+      return ($stateId) ? in_array($stateId, $states) : $states;
     }
   }
 

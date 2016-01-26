@@ -3,61 +3,89 @@
 require_once 'CRM/Core/Form.php';
 
 /**
- * Form controller class
- *
- * @see http://wiki.civicrm.org/confluence/display/CRMDOC43/QuickForm+Reference
+ * Administrative settings for the extension.
  */
 class CRM_Statelegemail_Form_Settings extends CRM_Core_Form {
-  public function buildQuickForm() {
 
-    // add form elements
-    $this->add(
-      'select', // field type
-      'favorite_color', // field name
-      'Favorite Color', // field label
-      $this->getColorOptions(), // list of options
-      TRUE // is required
-    );
+  /**
+   * Build the form.
+   */
+  public function buildQuickForm() {
+    $this->addSelect('states', array(
+      'entity' => 'address',
+      'field' => 'state_province_id',
+      'multiple' => TRUE,
+      'label' => ts('Enabled states', array('domain' => 'com.aghstrategies.statelegemail')),
+      'country_id' => 1228,
+      'placeholder' => ts('- any -', array('domain' => 'com.aghstrategies.statelegemail')),
+    ));
+
+    $this->add('text', 'key', ts('Sunlight Foundation API key', array('domain' => 'com.aghstrategies.statelegemail')));
+
     $this->addButtons(array(
       array(
         'type' => 'submit',
-        'name' => ts('Submit'),
+        'name' => ts('Save', array('domain' => 'com.aghstrategies.statelegemail')),
         'isDefault' => TRUE,
       ),
     ));
 
-    // export form elements
+    // Send element names to the form.
     $this->assign('elementNames', $this->getRenderableElementNames());
     parent::buildQuickForm();
   }
 
-  public function postProcess() {
-    $values = $this->exportValues();
-    $options = $this->getColorOptions();
-    CRM_Core_Session::setStatus(ts('You picked color "%1"', array(
-      1 => $options[$values['favorite_color']]
-    )));
-    parent::postProcess();
+  /**
+   * Populate defaults.
+   *
+   * @return array
+   *   The default values.
+   */
+  public function setDefaultValues() {
+    return array(
+      'states' => CRM_Petitionemail_Interface_Statelegemail::getValidStates(),
+      'key' => CRM_Petitionemail_Interface_Statelegemail::getApiKey(),
+    );
   }
 
-  public function getColorOptions() {
-    $options = array(
-      '' => ts('- select -'),
-      '#f00' => ts('Red'),
-      '#0f0' => ts('Green'),
-      '#00f' => ts('Blue'),
-      '#f0f' => ts('Purple'),
-    );
-    foreach (array('1','2','3','4','5','6','7','8','9','a','b','c','d','e') as $f) {
-      $options["#{$f}{$f}{$f}"] = ts('Grey (%1)', array(1 => $f));
+  /**
+   * Save values.
+   */
+  public function postProcess() {
+    $values = $this->exportValues();
+
+    try {
+      $result = civicrm_api3('Setting', 'create', array('statelegemail_key' => $values['key']));
+      $success = TRUE;
     }
-    return $options;
+    catch (CiviCRM_API3_Exception $e) {
+      $error = $e->getMessage();
+      CRM_Core_Error::debug_log_message(t('API Error: %1', array(1 => $error, 'domain' => 'com.aghstrategies.statelegemail')));
+      CRM_Core_Session::setStatus(ts('Error saving Sunlight Foundation API key', array('domain' => 'com.aghstrategies.statelegemail')), 'Error', 'error');
+      $success = FALSE;
+    }
+
+    try {
+      $result = civicrm_api3('Setting', 'create', array('statelegemail_states' => $values['states']));
+    }
+    catch (CiviCRM_API3_Exception $e) {
+      $error = $e->getMessage();
+      CRM_Core_Error::debug_log_message(t('API Error: %1', array(1 => $error, 'domain' => 'com.aghstrategies.statelegemail')));
+      CRM_Core_Session::setStatus(ts('Error saving enabled states', array('domain' => 'com.aghstrategies.statelegemail')), 'Error', 'error');
+      $success = FALSE;
+    }
+
+    if ($success) {
+      CRM_Core_Session::setStatus(ts('You have successfully updated the state legislator petition settings.', array('domain' => 'com.aghstrategies.statelegemail')), 'Settings saved', 'success');
+    }
+    parent::postProcess();
   }
 
   /**
    * Get the fields/elements defined in this form.
    *
-   * @return array (string)
+   * @return array
+   *   The names.
    */
   public function getRenderableElementNames() {
     // The _elements list includes some items which should not be
@@ -74,4 +102,5 @@ class CRM_Statelegemail_Form_Settings extends CRM_Core_Form {
     }
     return $elementNames;
   }
+
 }
