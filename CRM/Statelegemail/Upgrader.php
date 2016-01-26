@@ -41,18 +41,32 @@ class CRM_Statelegemail_Upgrader extends CRM_Statelegemail_Upgrader_Base {
         'Street_Address_Field' => array(
           'Street Address Field',
           "The ID number of the contact profile field storing the signer's street address.",
+          'Int',
         ),
         'City_Field' => array(
           'City Field',
           "The ID number of the contact profile field storing the signer's city.",
+          'Int',
         ),
         'State_Province_Field' => array(
           'State/Province Field',
           "The ID number of the contact profile field storing the signer's state.",
+          'Int',
         ),
         'Postal_Code_Field' => array(
           'Postal Code Field',
           "The ID number of the contact profile field storing the signer's ZIP code.",
+          'Int',
+        ),
+        'CC_Staff_Address' => array(
+          'Send a BCC to',
+          'The email address of someone who should receive a copy of the email.',
+          'String',
+        ),
+        'CC_Staff_Text' => array(
+          'BCC option label',
+          'The label for the checkbox allowing signers to send a BCC.',
+          'String',
         ),
       );
       foreach ($addressFields as $addressField => $details) {
@@ -66,7 +80,7 @@ class CRM_Statelegemail_Upgrader extends CRM_Statelegemail_Upgrader_Base {
             'custom_group_id' => "Letter_To",
             'label' => ts($details[0], array('domain' => 'com.aghstrategies.statelegemail')),
             'name' => $addressField,
-            'data_type' => "Int",
+            'data_type' => $details[2],
             'html_type' => "Text",
             'is_active' => 1,
             'help_post' => ts($details[1], array('domain' => 'com.aghstrategies.statelegemail')),

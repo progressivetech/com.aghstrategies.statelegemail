@@ -92,11 +92,13 @@ class CRM_Petitionemail_Interface_Statelegemail extends CRM_Petitionemail_Interf
         'toName' => $recipient['name'],
         'toEmail' => $recipient['email'],
         'subject' => $this->petitionEmailVal[$this->fields['Subject']],
-        // 'cc' => $cc, TODO: offer option to CC.
-        // 'bcc' => $bcc,
         'text' => $message,
         // 'html' => $html_message, TODO: offer HTML option.
       );
+
+      if (!empty($form->_submitValues['send_cc'])) {
+        $mailParams['bcc'] = $this->petitionEmailVal[$this->fields['CC_Staff_Address']];
+      }
 
       if (!CRM_Utils_Mail::send($mailParams)) {
         CRM_Core_Session::setStatus(
@@ -139,6 +141,14 @@ class CRM_Petitionemail_Interface_Statelegemail extends CRM_Petitionemail_Interf
         }
       }
       $defaults[$messageField] = $form->_defaultValues[$messageField] = $defaultMessage;
+      $form->setVar('_defaults', $defaults);
+    }
+
+    // Display the option to send a CC.
+    if (!empty($this->petitionEmailVal[$this->fields['CC_Staff_Address']])
+      && !empty($this->petitionEmailVal[$this->fields['CC_Staff_Text']])) {
+      $form->addElement('checkbox', 'send_cc', $this->petitionEmailVal[$this->fields['CC_Staff_Text']]);
+      $defaults['send_cc'] = TRUE;
       $form->setVar('_defaults', $defaults);
     }
 
