@@ -35,13 +35,17 @@ CRM.$(function($) {
           var legClear = $('<div/>', {
             class: 'clear',
           });
+          var legCount = 0;
           $.each(data, function(index, value) {
             var legRow = $('<div/>', {
               html: value.name,
             });
             legContent.append(legRow);
+            legCount++;
           });
-          legList.html([legLabel, legContent, legClear]);
+          if (legCount) {
+            legList.html([legLabel, legContent, legClear]);
+          }
         }
       );
     } else {
