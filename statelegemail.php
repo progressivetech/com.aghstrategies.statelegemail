@@ -1,4 +1,11 @@
 <?php
+/**
+ * @file
+ * Extension to email state legislators from CiviCRM petitions.
+ *
+ * Copyright (C) 2014-15, AGH Strategies, LLC <info@aghstrategies.com>
+ * Licensed under the GNU Affero Public License 3.0 (see LICENSE.txt)
+ */
 
 require_once 'statelegemail.civix.php';
 
@@ -137,7 +144,7 @@ function statelegemail_civicrm_caseTypes(&$caseTypes) {
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_caseTypes
  */
 function statelegemail_civicrm_angularModules(&$angularModules) {
-_statelegemail_civix_civicrm_angularModules($angularModules);
+  _statelegemail_civix_civicrm_angularModules($angularModules);
 }
 
 /**
@@ -148,16 +155,3 @@ _statelegemail_civix_civicrm_angularModules($angularModules);
 function statelegemail_civicrm_alterSettingsFolders(&$metaDataFolders = NULL) {
   _statelegemail_civix_civicrm_alterSettingsFolders($metaDataFolders);
 }
-
-/**
- * Functions below this ship commented out. Uncomment as required.
- *
-
-/**
- * Implements hook_civicrm_preProcess().
- *
- * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_preProcess
- *
-function statelegemail_civicrm_preProcess($formName, &$form) {
-
-} // */

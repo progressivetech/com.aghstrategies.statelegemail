@@ -1,4 +1,11 @@
 <?php
+/**
+ * @file
+ * Admin form.
+ *
+ * Copyright (C) 2016, AGH Strategies, LLC <info@aghstrategies.com>
+ * Licensed under the GNU Affero Public License 3.0 (see LICENSE.txt)
+ */
 
 require_once 'CRM/Core/Form.php';
 
@@ -31,7 +38,7 @@ class CRM_Statelegemail_Form_Settings extends CRM_Core_Form {
     ));
 
     // Send element names to the form.
-    $this->assign('elementNames', $this->getRenderableElementNames());
+    $this->assign('elementNames', array('states', 'key'));
     parent::buildQuickForm();
   }
 
@@ -79,28 +86,6 @@ class CRM_Statelegemail_Form_Settings extends CRM_Core_Form {
       CRM_Core_Session::setStatus(ts('You have successfully updated the state legislator petition settings.', array('domain' => 'com.aghstrategies.statelegemail')), 'Settings saved', 'success');
     }
     parent::postProcess();
-  }
-
-  /**
-   * Get the fields/elements defined in this form.
-   *
-   * @return array
-   *   The names.
-   */
-  public function getRenderableElementNames() {
-    // The _elements list includes some items which should not be
-    // auto-rendered in the loop -- such as "qfKey" and "buttons".  These
-    // items don't have labels.  We'll identify renderable by filtering on
-    // the 'label'.
-    $elementNames = array();
-    foreach ($this->_elements as $element) {
-      /** @var HTML_QuickForm_Element $element */
-      $label = $element->getLabel();
-      if (!empty($label)) {
-        $elementNames[] = $element->getName();
-      }
-    }
-    return $elementNames;
   }
 
 }

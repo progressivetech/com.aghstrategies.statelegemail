@@ -1,13 +1,20 @@
 <?php
+/**
+ * @file
+ * Recipient AJAX callback.
+ *
+ * Copyright (C) 2016, AGH Strategies, LLC <info@aghstrategies.com>
+ * Licensed under the GNU Affero Public License 3.0 (see LICENSE.txt)
+ */
 
 require_once 'CRM/Core/Page.php';
 
 /**
- * AJAX callback for newspaper listing.
+ * AJAX callback for legislator listing.
  */
 class CRM_Statelegemail_Page_AJAX_Recipients extends CRM_Core_Page {
   /**
-   * Provide the newspapers for the given postal code.
+   * Provide the legislators for the given address.
    *
    * Echos JSON object of the names, photo URLs, and emails.
    */

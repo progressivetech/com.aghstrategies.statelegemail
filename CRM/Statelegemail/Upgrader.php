@@ -2,6 +2,9 @@
 /**
  * @file
  * Install/uninstall steps.
+ *
+ * Copyright (C) 2016, AGH Strategies, LLC <info@aghstrategies.com>
+ * Licensed under the GNU Affero Public License 3.0 (see LICENSE.txt)
  */
 
 /**

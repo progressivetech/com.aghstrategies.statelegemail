@@ -1,11 +1,14 @@
 <?php
 /**
  * @file
- * Single email interface.
+ * State legislator email interface.
+ *
+ * Copyright (C) 2016, AGH Strategies, LLC <info@aghstrategies.com>
+ * Licensed under the GNU Affero Public License 3.0 (see LICENSE.txt)
  */
 
 /**
- * An interface to send letters to editors of NH newspapers.
+ * An interface to send petition messages to state legislators.
  *
  * @extends CRM_Petitionemail_Interface
  */
