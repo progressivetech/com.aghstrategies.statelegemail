@@ -237,7 +237,8 @@ class CRM_Petitionemail_Interface_Statelegemail extends CRM_Petitionemail_Interf
       $postalCode = $addressValues['Postal_Code_Field'];
     }
     else {
-      $postalCode = intval(array_shift(explode('-', $addressValues['Postal_Code_Field'])));
+      $postalCodeParts = explode('-', $addressValues['Postal_Code_Field']);
+      $postalCode = intval(array_shift($postalCodeParts));
     }
     $postalCode = str_pad("{$addressValues['Postal_Code_Field']}", 5, "0", STR_PAD_LEFT);
 
