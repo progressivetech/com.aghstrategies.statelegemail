@@ -71,4 +71,6 @@ CRM.$(function($) {
   $(address).keyup(getRecips);
   $(stateProvince).change(getRecips);
 
+  $('.send_cc-section').appendTo($('.crm-petition-activity-profile'));
+
 });

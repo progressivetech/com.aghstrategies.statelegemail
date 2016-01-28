@@ -137,14 +137,8 @@ class CRM_Petitionemail_Interface_Statelegemail extends CRM_Petitionemail_Interf
     }
 
     if (!empty($this->petitionEmailVal[$this->fields['Default_Message']])) {
-      $defaultMessage = $this->petitionEmailVal[$this->fields['Default_Message']];
-      foreach ($form->_elements as $element) {
-        if ($element->_attributes['name'] == $messageField && empty($element->_value)) {
-          $element->_value = $defaultMessage;
-        }
-      }
-      $defaults[$messageField] = $form->_defaultValues[$messageField] = $defaultMessage;
-      $form->setVar('_defaults', $defaults);
+      $defaults[$messageField] = $this->petitionEmailVal[$this->fields['Default_Message']];
+      $form->setDefaults($defaults);
     }
 
     // Display the option to send a CC.
@@ -152,7 +146,10 @@ class CRM_Petitionemail_Interface_Statelegemail extends CRM_Petitionemail_Interf
       && !empty($this->petitionEmailVal[$this->fields['CC_Staff_Text']])) {
       $form->addElement('checkbox', 'send_cc', $this->petitionEmailVal[$this->fields['CC_Staff_Text']]);
       $defaults['send_cc'] = TRUE;
-      $form->setVar('_defaults', $defaults);
+      $form->setDefaults($defaults);
+      CRM_Core_Region::instance('form-body')->add(array(
+        'template' => 'CRM/Statelegemail/Form/SendCC.tpl',
+      ));
     }
 
     $addressFields = $this->findAddressFields();
