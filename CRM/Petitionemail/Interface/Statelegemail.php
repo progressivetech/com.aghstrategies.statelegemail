@@ -158,6 +158,15 @@ class CRM_Petitionemail_Interface_Statelegemail extends CRM_Petitionemail_Interf
 
     CRM_Core_Resources::singleton()->addScriptFile('com.aghstrategies.statelegemail', 'js/sigform.js')
       ->addVars('statelegemail', $jsVars);
+
+    $form->addButtons(array(
+        array(
+          'type' => 'next',
+          'name' => ts('Send', array('domain' => 'com.aghstrategies.statelegemail')),
+          'isDefault' => TRUE,
+        ),
+      )
+    );
   }
 
   /**
