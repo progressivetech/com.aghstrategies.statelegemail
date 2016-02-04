@@ -306,7 +306,7 @@ class CRM_Petitionemail_Interface_Statelegemail extends CRM_Petitionemail_Interf
           $displayName = "{$stateConfig['titles'][$result['chamber']]} {$result['full_name']}";
           $greeting = ts('Dear %1 %2,', array(
             1 => $stateConfig['titles'][$result['chamber']],
-            2 => $result['full_name'],
+            2 => $result['last_name'],
             'domain' => 'com.aghstrategies.statelegemail',
           ));
         }
