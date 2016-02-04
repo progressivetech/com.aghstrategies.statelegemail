@@ -25,15 +25,76 @@ function statelegemail_civicrm_buildForm($formName, &$form) {
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_navigationMenu
  */
 function statelegemail_civicrm_navigationMenu(&$menu) {
-  _statelegemail_civix_insert_navigation_menu($menu, 'civicrm/petition/add', array(
-    'label' => ts('State Legislators Email Settings', array('domain' => 'com.aghstrategies.statelegemail')),
-    'name' => 'statelegemail_settings',
-    'url' => 'civicrm/statelegemail/settings',
-    'permission' => 'administer CiviCRM',
-    'operator' => 'AND',
-    'separator' => 0,
-  ));
-  _statelegemail_civix_navigationMenu($menu);
+  // We'd like the item to be beneath these two items.
+  $idealTree = array(
+    'Administer',
+    'CiviCampaign',
+  );
+
+  // Walk down the menu to see if we can find them where we expect them.
+  $walkMenu = $menu;
+  $branches = array();
+  foreach ($idealTree as $limb) {
+    foreach ($walkMenu as $id => $item) {
+      if ($item['attributes']['name'] == $limb) {
+        $walkMenu = CRM_Utils_Array::value('child', $item, array());
+        $branches[] = $id;
+        $branches[] = 'child';
+        continue 2;
+      }
+    }
+    // If the expected parent isn't at this level of the menu, we'll just drop
+    // it here.
+    break;
+  }
+
+  $item = array(
+    'attributes' => array(
+      'label' => ts('State Legislators Email Settings', array('domain' => 'com.aghstrategies.statelegemail')),
+      'name' => 'statelegemail_settings',
+      'url' => 'civicrm/statelegemail/settings?reset=1',
+      'permission' => 'administer CiviCRM',
+      'operator' => 'AND',
+      'separator' => 0,
+      'active' => 1,
+    ),
+  );
+  if (!empty($id)) {
+    $item['parentID'] = $id;
+  }
+
+  // Need to put together exactly where the item should be added;
+  $treeMenu = &$menu;
+  foreach ($branches as $branch) {
+    $treeMenu = &$treeMenu[$branch];
+  }
+
+  $newId = 0;
+  statelegemail_scanMaxNavId($menu, $newId);
+  $newId++;
+  $item['navID'] = $newId;
+
+  $treeMenu[$newId] = $item;
+}
+
+/**
+ * Scans recursively for the highest ID in the navigation.
+ *
+ * Better than searching the database because other extensions may have added
+ * items in the meantime.
+ *
+ * @param array $menu
+ *   The menu to scan.
+ * @param int &$max
+ *   The maximum found so far.
+ */
+function statelegemail_scanMaxNavId($menu, &$max) {
+  foreach ($menu as $id => $item) {
+    $max = max($id, $max);
+    if (!empty($item['child'])) {
+      statelegemail_scanMaxNavId($item['child'], $max);
+    }
+  }
 }
 
 /**
