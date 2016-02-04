@@ -87,7 +87,14 @@ class CRM_Petitionemail_Interface_Statelegemail extends CRM_Petitionemail_Interf
     }
     $recipients = self::findRecipients($addressValues);
 
+    $selectedRecipients = CRM_Utils_Array::value('selected_leges', $form->_submitValues, '');
+    $selectedRecipients = explode(',', $selectedRecipients);
+
     foreach ($recipients as $recipient) {
+      if (!in_array($recipient['leg_id'], $selectedRecipients)) {
+        continue;
+      }
+
       // Setup email message:
       $mailParams = array(
         'groupName' => 'Activity Email Sender',
@@ -155,6 +162,11 @@ class CRM_Petitionemail_Interface_Statelegemail extends CRM_Petitionemail_Interf
     $addressFields = $this->findAddressFields();
     $jsVars = array_merge(array_fill_keys($this->addressFields, NULL), $addressFields);
     $jsVars['message'] = $messageField;
+
+    $form->addElement('text', 'selected_leges', ts('Selected legislator IDs', array('domain' => 'com.aghstrategies.statelegemail')));
+    CRM_Core_Region::instance('form-body')->add(array(
+      'template' => 'CRM/Statelegemail/Form/SelectedLeges.tpl',
+    ));
 
     CRM_Core_Resources::singleton()->addScriptFile('com.aghstrategies.statelegemail', 'js/sigform.js')
       ->addVars('statelegemail', $jsVars);
