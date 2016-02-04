@@ -4,6 +4,11 @@
  */
 
 CRM.$(function($) {
+  var initialSelectedLeges = $('#selected_leges').val().split(',');
+  if (initialSelectedLeges.length == 1 && initialSelectedLeges[0] == '') {
+    initialSelectedLeges = [];
+  }
+  $('#selected_leges').hide();
   var legList = $('<div/>', {
     id: 'legislator-list',
     class: 'crm-section',
@@ -12,7 +17,19 @@ CRM.$(function($) {
     id: 'legislator-greeting',
     class: 'crm-section',
   });
+  var legCheck = function() {
+    var selectedLeges = [];
+    maxLength = 0;
+    greeting.children().hide();
+    $('input[name="select-leges"]:checked').each(function() {
+      var thisLegId = $(this).val();
+      selectedLeges.push(thisLegId);
+      greeting.children('[statelegemail-leg-id="' + thisLegId + '"]').show();
+    });
+    $('#selected_leges').val(selectedLeges.join(','));
+  }
   var getRecips = function() {
+    var firstRun = (initialSelectedLeges.length > 0);
     var zipval = $(zip).val();
     if (!$(stateProvince).val().length
       || !$(city).val().length
@@ -46,13 +63,43 @@ CRM.$(function($) {
           });
           var legCount = 0;
           $.each(data, function(index, value) {
-            var legRow = $('<div/>', {
-              html: value.name,
+            var legCheckBox = $('<input/>', {
+              type: 'checkbox',
+              class: 'crm-form-checkbox',
+              value: value.leg_id,
+              name: 'select-leges',
+              id: 'select-leges-' + value.leg_id,
+              change: legCheck,
             });
+            if (firstRun) {
+              var boxIndex = initialSelectedLeges.indexOf(value.leg_id);
+              if (boxIndex >= 0) {
+                legCheckBox.prop('checked', true);
+                initialSelectedLeges.splice(boxIndex, 1);
+              } else {
+                legCheckBox.prop('checked', false);
+              }
+            } else {
+              legCheckBox.prop('checked', true);
+            }
+            var legRow = $('<div/>', {
+              class: 'statelegemail-paper-row',
+              html: ' ',
+            }).prepend(legCheckBox).append($('<label/>', {
+              for: 'select-leges-' + value.leg_id,
+              html: value.name,
+            }));
             legContent.append(legRow);
             var greetingRow = $('<div/>', {
               html: value.greeting,
+              'statelegemail-leg-id': value.leg_id,
             });
+            if (legCheckBox.prop('checked')) {
+              greetingRow.show();
+            }
+            else {
+              greetingRow.hide();
+            }
             greeting.append(greetingRow);
             legCount++;
           });
