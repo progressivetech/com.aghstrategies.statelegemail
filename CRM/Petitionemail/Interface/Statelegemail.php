@@ -95,7 +95,7 @@ class CRM_Petitionemail_Interface_Statelegemail extends CRM_Petitionemail_Interf
         'toName' => $recipient['name'],
         'toEmail' => $recipient['email'],
         'subject' => $this->petitionEmailVal[$this->fields['Subject']],
-        'text' => $message,
+        'text' => "{$recipient['greeting']}\n\n$message",
         // 'html' => $html_message, TODO: offer HTML option.
       );
 
@@ -270,22 +270,34 @@ class CRM_Petitionemail_Interface_Statelegemail extends CRM_Petitionemail_Interf
     $legislators = json_decode($string, TRUE);
 
     $return = array();
+    $requiredFields = array(
+      'email',
+      'full_name',
+      'last_name',
+      'leg_id',
+    );
     foreach ($legislators as $result) {
-      if (empty($result['email']) || empty($result['full_name'])) {
-        continue;
+      foreach ($requiredFields as $requiredField) {
+        if (empty($result[$requiredField])) {
+          continue 2;
+        }
       }
       if (!empty($result['state']) && !empty($result['chamber'])) {
         if (empty($stateConfig['titles'][$result['chamber']])) {
           $displayName = $result['full_name'];
+          $greeting = "Dear {$result['full_name']},";
         }
         else {
           $displayName = "{$stateConfig['titles'][$result['chamber']]} {$result['full_name']}";
+          $greeting = "Dear {$stateConfig['titles'][$result['chamber']]} {$result['last_name']},";
         }
       }
       $return[] = array(
         'email' => $result['email'],
         'photourl' => CRM_Utils_Array::value('photo_url', $result),
         'name' => $displayName,
+        'leg_id' => $result['leg_id'],
+        'greeting' => $greeting,
       );
     }
 

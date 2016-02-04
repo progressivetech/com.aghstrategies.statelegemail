@@ -8,6 +8,10 @@ CRM.$(function($) {
     id: 'legislator-list',
     class: 'crm-section',
   });
+  var greeting = $('<div/>', {
+    id: 'legislator-greeting',
+    class: 'crm-section',
+  });
   var getRecips = function() {
     var zipval = $(zip).val();
     if (!$(stateProvince).val().length
@@ -46,6 +50,10 @@ CRM.$(function($) {
               html: value.name,
             });
             legContent.append(legRow);
+            var greetingRow = $('<div/>', {
+              html: value.greeting,
+            });
+            greeting.append(greetingRow);
             legCount++;
           });
           if (legCount) {
@@ -55,11 +63,13 @@ CRM.$(function($) {
       );
     } else {
       legList.html('');
+      greeting.html('');
     }
   }
 
   var messageField = document.getElementById(CRM.vars.statelegemail.message);
   $('.crm-petition-contact-profile').after(legList);
+  $(messageField).before(greeting);
   var zip = document.getElementById(CRM.vars.statelegemail.Postal_Code_Field);
   var stateProvince = document.getElementById(CRM.vars.statelegemail.State_Province_Field);
   var city = document.getElementById(CRM.vars.statelegemail.City_Field);
