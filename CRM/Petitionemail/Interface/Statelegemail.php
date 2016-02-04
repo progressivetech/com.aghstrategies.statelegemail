@@ -285,11 +285,18 @@ class CRM_Petitionemail_Interface_Statelegemail extends CRM_Petitionemail_Interf
       if (!empty($result['state']) && !empty($result['chamber'])) {
         if (empty($stateConfig['titles'][$result['chamber']])) {
           $displayName = $result['full_name'];
-          $greeting = "Dear {$result['full_name']},";
+          $greeting = ts('Dear %1,', array(
+            1 => $result['full_name'],
+            'domain' => 'com.aghstrategies.statelegemail',
+          ));
         }
         else {
           $displayName = "{$stateConfig['titles'][$result['chamber']]} {$result['full_name']}";
-          $greeting = "Dear {$stateConfig['titles'][$result['chamber']]} {$result['last_name']},";
+          $greeting = ts('Dear %1 %2,', array(
+            1 => $stateConfig['titles'][$result['chamber']],
+            2 => $result['full_name'],
+            'domain' => 'com.aghstrategies.statelegemail',
+          ));
         }
       }
       $return[] = array(
