@@ -62,6 +62,7 @@ CRM.$(function($) {
             class: 'clear',
           });
           var legCount = 0;
+          greeting.html('');
           $.each(data, function(index, value) {
             var legCheckBox = $('<input/>', {
               type: 'checkbox',
