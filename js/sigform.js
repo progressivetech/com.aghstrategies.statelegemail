@@ -71,6 +71,7 @@ CRM.$(function($) {
               name: 'select-leges',
               id: 'select-leges-' + value.leg_id,
               change: legCheck,
+              checked: false,
             });
             if (firstRun) {
               var boxIndex = initialSelectedLeges.indexOf(value.leg_id);
@@ -81,7 +82,7 @@ CRM.$(function($) {
                 legCheckBox.prop('checked', false);
               }
             } else {
-              legCheckBox.prop('checked', true);
+              legCheckBox.prop('checked', false);
             }
             var legRow = $('<div/>', {
               class: 'statelegemail-paper-row',
