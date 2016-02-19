@@ -71,7 +71,6 @@ CRM.$(function($) {
               name: 'select-leges',
               id: 'select-leges-' + value.leg_id,
               change: legCheck,
-              checked: false,
             });
             if (firstRun) {
               var boxIndex = initialSelectedLeges.indexOf(value.leg_id);
