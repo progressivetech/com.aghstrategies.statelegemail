@@ -11,12 +11,21 @@ CRM.$(function($) {
     'Postal_Code',
   ];
   $.each(addressFields, function(index, value) {
-    var $addrField = $('#customData .custom-group-Letter_To input[data-crm-custom="Letter_To:' + value + '_Field"]');
-    $addrField.attr({
-      placeholder: '- Select Field -',
-      allowClear: 'true',
+    var addrFieldSelector = '#customData .custom-group-Letter_To input[data-crm-custom="Letter_To:' + value + '_Field"]';
+    var $addrField = $(addrFieldSelector);
+    var initAddrField = function(f) {
+      f.attr({
+        placeholder: '- Select Field -',
+        allowClear: 'true',
+      });
+      createEntityRef(f, $('#contact_profile_id').val(), value.toLowerCase());
+    };
+    initAddrField($addrField);
+
+    $('body').on('crmLoad', function() {
+      $addrField = $(addrFieldSelector);
+      initAddrField($addrField);
     });
-    createEntityRef($addrField, $('#contact_profile_id').val(), value.toLowerCase());
 
     $('#contact_profile_id').change(function() {
       $addrField.crmEntityRef('destroy');
