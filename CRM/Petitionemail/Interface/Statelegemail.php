@@ -274,7 +274,7 @@ class CRM_Petitionemail_Interface_Statelegemail extends CRM_Petitionemail_Interf
     }
 
     // Now that we have the lat/long, look up the params.
-    $query = "http://openstates.org/api/v1/legislators/geo/?lat={$params['geo_code_1']}&long={$params['geo_code_2']}&apikey={$apiKey}";
+    $query = "https://openstates.org/api/v1/legislators/geo/?lat={$params['geo_code_1']}&long={$params['geo_code_2']}&apikey={$apiKey}";
     require_once 'HTTP/Request.php';
     $request = new HTTP_Request($query);
     $request->sendRequest();
@@ -372,7 +372,7 @@ class CRM_Petitionemail_Interface_Statelegemail extends CRM_Petitionemail_Interf
         return FALSE;
       }
 
-      $query = "http://openstates.org/api/v1/metadata/{$state}/?apikey={$apiKey}";
+      $query = "https://openstates.org/api/v1/metadata/{$state}/?apikey={$apiKey}";
       require_once 'HTTP/Request.php';
       $request = new HTTP_Request($query);
       $request->sendRequest();
