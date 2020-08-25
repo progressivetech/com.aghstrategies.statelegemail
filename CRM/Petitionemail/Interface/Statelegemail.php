@@ -275,11 +275,9 @@ class CRM_Petitionemail_Interface_Statelegemail extends CRM_Petitionemail_Interf
 
     // Now that we have the lat/long, look up the params.
     $query = "https://openstates.org/api/v1/legislators/geo/?lat={$params['geo_code_1']}&long={$params['geo_code_2']}&apikey={$apiKey}";
-    require_once 'HTTP/Request.php';
-    $request = new HTTP_Request($query);
-    $request->sendRequest();
-    $string = $request->getResponseBody();
-    $legislators = json_decode($string, TRUE);
+    $client = new GuzzleHttp\Client();
+    $response = $client->request('GET', $query);
+    $legislators = json_decode($response->getBody()->getContents(), TRUE);
 
     $return = array();
     $requiredFields = array(
@@ -373,11 +371,9 @@ class CRM_Petitionemail_Interface_Statelegemail extends CRM_Petitionemail_Interf
       }
 
       $query = "https://openstates.org/api/v1/metadata/{$state}/?apikey={$apiKey}";
-      require_once 'HTTP/Request.php';
-      $request = new HTTP_Request($query);
-      $request->sendRequest();
-      $string = $request->getResponseBody();
-      $stateInfo = json_decode($string, TRUE);
+      $client = new GuzzleHttp\Client();
+      $response = $client->request('GET', $query);
+      $stateInfo = json_decode($response->getBody()->getContents(), TRUE);
 
       // Go through state info and set titles.
       if (empty($stateInfo['chambers'])) {
