@@ -11,9 +11,26 @@
  * Collection of upgrade steps.
  */
 class CRM_Statelegemail_Upgrader extends CRM_Statelegemail_Upgrader_Base {
-
   // By convention, functions that look like "function upgrade_NNNN()" are
   // upgrade tasks. They are executed in order (like Drupal's hook_update_N).
+
+  private $valueRecords = [
+    [
+      'label' => 'State Legislators',
+      'value' => 'Statelegemail',
+      'name' => 'State_Legislators',
+    ],
+    [
+      'label' => 'State Legislators - Upper House',
+      'value' => 'Statelegemailupper',
+      'name' => 'State_Legislators_Upper',
+    ],
+    [
+      'label' => 'State Legislators - Lower House',
+      'value' => 'Statelegemaillower',
+      'name' => 'State_Legislators_lower',
+    ],
+  ];
 
   /**
    * Create the custom field and interface option on install.
@@ -23,16 +40,7 @@ class CRM_Statelegemail_Upgrader extends CRM_Statelegemail_Upgrader_Base {
    */
   public function install() {
     try {
-      // Add interface as option for recipient system.
-      $result = civicrm_api3('OptionValue', 'create', array(
-        'option_group_id' => 'letter_to_recipient_system',
-        'label' => 'State Legislators',
-        'value' => 'Statelegemail',
-        'name' => 'State_Legislators',
-        'is_default' => 0,
-        'is_active' => 1,
-      ));
-
+      $this->addRecipientSystemValues();
       // Add address fields, but only if they're not already added.
       $maxweight = civicrm_api3('CustomField', 'getvalue', array(
         'return' => "weight",
@@ -105,17 +113,11 @@ class CRM_Statelegemail_Upgrader extends CRM_Statelegemail_Upgrader_Base {
    */
   public function uninstall() {
     try {
-      $result = civicrm_api3('OptionValue', 'get', array(
-        'option_group_id' => "letter_to_recipient_system",
-        'value' => "Statelegemail",
-      ));
-      if (!empty($result['values'])) {
-        foreach ($result['values'] as $key => $value) {
-          $result = civicrm_api3('OptionValue', 'delete', array(
-            'id' => $key,
-          ));
-        }
-      }
+      $valueNames = array_column($this->valueRecords, 'name');
+      \Civi\Api4\OptionValue::delete(FALSE)
+        ->addWhere('option_group_id:name', '=', 'letter_to_recipient_system')
+        ->addWhere('name', 'IN', $valueNames)
+        ->execute();
       // Don't delete custom fields because they might be used by other delivery
       // extensions.
     }
@@ -131,18 +133,12 @@ class CRM_Statelegemail_Upgrader extends CRM_Statelegemail_Upgrader_Base {
    */
   public function enable() {
     try {
-      $result = civicrm_api3('OptionValue', 'get', array(
-        'option_group_id' => "letter_to_recipient_system",
-        'value' => "Statelegemail",
-      ));
-      if (!empty($result['values'])) {
-        foreach ($result['values'] as $key => $value) {
-          $result = civicrm_api3('OptionValue', 'create', array(
-            'id' => $key,
-            'is_active' => 1,
-          ));
-        }
-      }
+      $valueNames = array_column($this->valueRecords, 'name');
+      \Civi\Api4\OptionValue::update(FALSE)
+        ->addWhere('option_group_id:name', '=', 'letter_to_recipient_system')
+        ->addWhere('name', 'IN', $valueNames)
+        ->addValue('is_active', TRUE)
+        ->execute();
     }
     catch (CiviCRM_API3_Exception $e) {
       $error = $e->getMessage();
@@ -156,23 +152,51 @@ class CRM_Statelegemail_Upgrader extends CRM_Statelegemail_Upgrader_Base {
    */
   public function disable() {
     try {
-      $result = civicrm_api3('OptionValue', 'get', array(
-        'option_group_id' => "letter_to_recipient_system",
-        'value' => "Statelegemail",
-      ));
-      if (!empty($result['values'])) {
-        foreach ($result['values'] as $key => $value) {
-          $result = civicrm_api3('OptionValue', 'create', array(
-            'id' => $key,
-            'is_active' => 0,
-          ));
-        }
-      }
+      $valueNames = array_column($this->valueRecords, 'name');
+      \Civi\Api4\OptionValue::update(FALSE)
+        ->addWhere('option_group_id:name', '=', 'letter_to_recipient_system')
+        ->addWhere('name', 'IN', $valueNames)
+        ->addValue('is_active', FALSE)
+        ->execute();
     }
     catch (CiviCRM_API3_Exception $e) {
       $error = $e->getMessage();
       CRM_Core_Error::debug_log_message(t('API Error: %1', array(1 => $error, 'domain' => 'com.aghstrategies.statelegemail')));
       // TODO: display error.
+    }
+  }
+
+  /**
+   * Add the ability to target only the upper or lower house.
+   */
+  public function upgrade_1000() {
+    $this->ctx->log->info('State Legislative Email: Add ability to target upper/lower house.');
+    // Make sure they don't already exist.
+    $this->addRecipientSystemValues();
+    return TRUE;
+  }
+
+  /**
+   * (Re-)generate the complete list of recipient values.
+   */
+  public function addRecipientSystemValues() {
+    $valueNames = array_column($this->valueRecords, 'name');
+    $existingValues = \Civi\Api4\OptionValue::get(FALSE)
+      ->addSelect('name')
+      ->addWhere('option_group_id:name', '=', 'letter_to_recipient_system')
+      ->addWhere('name', 'IN', $valueNames)
+      ->execute()
+      ->column('name');
+    foreach ($this->valueRecords as $valueRecord) {
+      if (!in_array($valueRecord['name'], $existingValues)) {
+        \Civi\Api4\OptionValue::create(FALSE)
+          ->addValue('option_group_id:name', 'letter_to_recipient_system')
+          ->addValue('label', $valueRecord['label'])
+          ->addValue('value', $valueRecord['value'])
+          ->addValue('name', $valueRecord['name'])
+          ->addValue('is_active', TRUE)
+          ->execute();
+      }
     }
   }
 

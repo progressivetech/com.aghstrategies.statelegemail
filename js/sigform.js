@@ -37,6 +37,10 @@ CRM.$(function($) {
       legList.html('');
       return;
     }
+
+    var url = new URL(location.href);
+    var surveyId = parseInt(url.searchParams.get("sid"));
+
     if ((zipval.length == 5 && $.isNumeric(zipval))
       || (zipval.length == 10
         && $.isNumeric(zipval.substring(0,5))
@@ -48,6 +52,7 @@ CRM.$(function($) {
           state: $(stateProvince).val(),
           city: $(city).val(),
           address: $(address).val(),
+          surveyId: surveyId,
         },
         function(data) {
           var legLabel = $('<div/>', {
@@ -100,6 +105,10 @@ CRM.$(function($) {
             }
             else {
               greetingRow.hide();
+            }
+            if (data.length == 1) {
+              legCheckBox.prop('checked', true);
+              legCheckBox.attr("disabled", true);
             }
             greeting.append(greetingRow);
             legCount++;

@@ -85,7 +85,7 @@ class CRM_Petitionemail_Interface_Statelegemail extends CRM_Petitionemail_Interf
       }
       $addressValues[$fieldName] = CRM_Utils_Array::value($addressFields[$fieldName], $form->_submitValues, '');
     }
-    $recipients = self::findRecipients($addressValues);
+    $recipients = $this->findRecipients($addressValues);
 
     $selectedRecipients = CRM_Utils_Array::value('selected_leges', $form->_submitValues, '');
     $selectedRecipients = explode(',', $selectedRecipients);
@@ -225,7 +225,7 @@ class CRM_Petitionemail_Interface_Statelegemail extends CRM_Petitionemail_Interf
    *   - photourl, and
    *   - name.
    */
-  public static function findRecipients($addressValues) {
+  public function findRecipients($addressValues) {
     if (!self::getValidStates($addressValues['State_Province_Field'])) {
       Civi::log()->debug("StateLegEmail: Missing State_Province_Field in addressValues.");
       return array();
@@ -289,6 +289,10 @@ class CRM_Petitionemail_Interface_Statelegemail extends CRM_Petitionemail_Interf
           Civi::log()->debug("StateLegEmail: Missing fields when looking up address: $requiredField for id: " . $result['id']);
           continue 2;
         }
+      }
+      // Don't process if we're limiting by upper/lower house and this is the wrong house.
+      if ($this->limitHouse && ($result['current_role']['org_classification'] ?? FALSE) != $this->limitHouse) {
+        continue;
       }
       if (isset($result['current_role']['title'])) {
         $displayName = $result['current_role']['title'] .  " " . $result['name'];
