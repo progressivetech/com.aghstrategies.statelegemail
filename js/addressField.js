@@ -11,7 +11,7 @@ CRM.$(function($) {
     'Postal_Code',
   ];
   $.each(addressFields, function(index, value) {
-    var addrFieldSelector = '#customData .custom-group-Letter_To input[data-crm-custom="Letter_To:' + value + '_Field"]';
+    var addrFieldSelector = '#customData .custom-group-Email_Recipient input[data-crm-custom="Email_Recipient:' + value + '_Field"]';
     var $addrField = $(addrFieldSelector);
     var initAddrField = function(f) {
       f.attr({
@@ -41,7 +41,6 @@ CRM.$(function($) {
       api: {
         params: {
           uf_group_id: profileId,
-          field_name: fieldName,
         },
       },
       allowClear: true,

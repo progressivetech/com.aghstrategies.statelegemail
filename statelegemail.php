@@ -16,6 +16,10 @@ function statelegemail_civicrm_buildForm($formName, &$form) {
   switch ($formName) {
     case 'CRM_Campaign_Form_Petition':
       CRM_Core_Resources::singleton()->addScriptFile('com.aghstrategies.statelegemail', 'js/addressField.js');
+      break;
+    case 'CRM_Custom_Form_CustomDataByType':
+      CRM_Core_Resources::singleton()->addScriptFile('com.aghstrategies.statelegemail', 'js/petitionemailstateleg.js');
+      break;
   }
 }
 
