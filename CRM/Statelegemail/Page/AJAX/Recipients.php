@@ -25,14 +25,16 @@ class CRM_Statelegemail_Page_AJAX_Recipients extends CRM_Core_Page {
       'City_Field' => CRM_Utils_Request::retrieve('city', 'String'),
       'Street_Address_Field' => CRM_Utils_Request::retrieve('address', 'String'),
     );
-
+    $surveyId = CRM_Utils_Request::retrieve('surveyId', 'Int');
     foreach ($addressValues as $val) {
       if (empty($val)) {
         return;
       }
     }
 
-    $recipients = CRM_Petitionemail_Interface_Statelegemail::findRecipients($addressValues);
+    $className = CRM_Petitionemail_Interface::findInterface($survey_id);
+    $class = new $className($surveyId);
+    $recipients = $class->findRecipients($addressValues);
     CRM_Utils_JSON::output($recipients);
   }
 

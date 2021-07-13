@@ -85,7 +85,7 @@ class CRM_Petitionemail_Interface_Statelegemail extends CRM_Petitionemail_Interf
       }
       $addressValues[$fieldName] = CRM_Utils_Array::value($addressFields[$fieldName], $form->_submitValues, '');
     }
-    $recipients = self::findRecipients($addressValues);
+    $recipients = $this->findRecipients($addressValues);
 
     $selectedRecipients = CRM_Utils_Array::value('selected_leges', $form->_submitValues, '');
     $selectedRecipients = explode(',', $selectedRecipients);
@@ -225,20 +225,16 @@ class CRM_Petitionemail_Interface_Statelegemail extends CRM_Petitionemail_Interf
    *   - photourl, and
    *   - name.
    */
-  public static function findRecipients($addressValues) {
+  public function findRecipients($addressValues) {
     if (!self::getValidStates($addressValues['State_Province_Field'])) {
+      Civi::log()->debug("StateLegEmail: Missing State_Province_Field in addressValues.");
       return array();
     }
 
     // Get api key setting.
     $apiKey = self::getApiKey();
     if (empty($apiKey)) {
-      // TODO: provide some better notice.
-      return array();
-    }
-
-    $stateConfig = self::getStateConfig($addressValues['State_Province_Field']);
-    if (empty($stateConfig)) {
+      Civi::log()->debug("StateLegEmail: Missing API key.");
       return array();
     }
 
@@ -274,135 +270,54 @@ class CRM_Petitionemail_Interface_Statelegemail extends CRM_Petitionemail_Interf
     }
 
     // Now that we have the lat/long, look up the params.
-    $query = "https://openstates.org/api/v1/legislators/geo/?lat={$params['geo_code_1']}&long={$params['geo_code_2']}&apikey={$apiKey}";
-    require_once 'HTTP/Request.php';
-    $request = new HTTP_Request($query);
-    $request->sendRequest();
-    $string = $request->getResponseBody();
-    $legislators = json_decode($string, TRUE);
+    $query = "https://v3.openstates.org/people.geo?lat={$params['geo_code_1']}&lng={$params['geo_code_2']}&apikey={$apiKey}";
+    $client = new GuzzleHttp\Client();
+    $response = $client->request('GET', $query);
+    $response_decoded = json_decode($response->getBody()->getContents(), TRUE);
 
     $return = array();
     $requiredFields = array(
       'email',
-      'full_name',
-      'last_name',
-      'leg_id',
+      'name',
+      'family_name',
+      'id',
+      'current_role'
     );
-    foreach ($legislators as $result) {
+    foreach ($response_decoded['results'] as $result) {
       foreach ($requiredFields as $requiredField) {
         if (empty($result[$requiredField])) {
+          Civi::log()->debug("StateLegEmail: Missing fields when looking up address: $requiredField for id: " . $result['id']);
           continue 2;
         }
       }
-      if (!empty($result['state']) && !empty($result['chamber'])) {
-        if (empty($stateConfig['titles'][$result['chamber']])) {
-          $displayName = $result['full_name'];
-          $greeting = ts('Dear %1,', array(
-            1 => $result['full_name'],
-            'domain' => 'com.aghstrategies.statelegemail',
-          ));
-        }
-        else {
-          $displayName = "{$stateConfig['titles'][$result['chamber']]} {$result['full_name']}";
-          $greeting = ts('Dear %1 %2,', array(
-            1 => $stateConfig['titles'][$result['chamber']],
-            2 => $result['last_name'],
-            'domain' => 'com.aghstrategies.statelegemail',
-          ));
-        }
+      // Don't process if we're limiting by upper/lower house and this is the wrong house.
+      if ($this->limitHouse && ($result['current_role']['org_classification'] ?? FALSE) != $this->limitHouse) {
+        continue;
+      }
+      if (isset($result['current_role']['title'])) {
+        $displayName = $result['current_role']['title'] .  " " . $result['name'];
+        $greeting = ts('Dear %1 %2,', array(
+          1 => $result['current_role']['title'],
+          2 => $result['family_name'],
+          'domain' => 'com.aghstrategies.statelegemail',
+        ));
+      }
+      else {
+        $displayName = $result['name'];
+        $greeting = ts('Dear %1,', array(
+          1 => $result['name'],
+          'domain' => 'com.aghstrategies.statelegemail',
+        ));
       }
       $return[] = array(
         'email' => $result['email'],
-        'photourl' => CRM_Utils_Array::value('photo_url', $result),
+        'photourl' => CRM_Utils_Array::value('image', $result),
         'name' => $displayName,
-        'leg_id' => $result['leg_id'],
+        'leg_id' => $result['id'],
         'greeting' => $greeting,
       );
     }
-
     return $return;
-  }
-
-  /**
-   * Get the state configuration.
-   *
-   * @param int $stateProvinceId
-   *   The state/province ID from CiviCRM.
-   *
-   * @return array
-   *   The configuration from Sunlight.
-   */
-  private static function getStateConfig($stateProvinceId) {
-    $stateProvinceId = intval($stateProvinceId);
-
-    // Find the state abbreviation from ID.
-    try {
-      $states = civicrm_api3('Address', 'getoptions', array(
-        'field' => "state_province_id",
-        'country_id' => 1228,
-        'context' => "abbreviate",
-      ));
-      if (empty($states['values'][$stateProvinceId])) {
-        return FALSE;
-      }
-      $state = strtolower($states['values'][$stateProvinceId]);
-    }
-    catch (CiviCRM_API3_Exception $e) {
-      print_r($e);
-      $error = $e->getMessage();
-      CRM_Core_Error::debug_log_message(t('API Error: %1', array(1 => $error, 'domain' => 'com.aghstrategies.statelegemail')));
-    }
-
-    // Find the config.
-    try {
-      $stateConfig = civicrm_api3('Setting', 'getvalue', array(
-        'name' => 'statelegemail_stateconfig',
-        'group' => 'State Legislators Email Preferences',
-      ));
-    }
-    catch (CiviCRM_API3_Exception $e) {
-      $error = $e->getMessage();
-      CRM_Core_Error::debug_log_message(t('API Error: %1', array(1 => $error, 'domain' => 'com.aghstrategies.statelegemail')));
-    }
-
-    if (empty($stateConfig[$state])) {
-      // Need to go look it up. First, Get api key setting.
-      $apiKey = self::getApiKey();
-      if (empty($apiKey)) {
-        return FALSE;
-      }
-
-      $query = "https://openstates.org/api/v1/metadata/{$state}/?apikey={$apiKey}";
-      require_once 'HTTP/Request.php';
-      $request = new HTTP_Request($query);
-      $request->sendRequest();
-      $string = $request->getResponseBody();
-      $stateInfo = json_decode($string, TRUE);
-
-      // Go through state info and set titles.
-      if (empty($stateInfo['chambers'])) {
-        return FALSE;
-      }
-      $stateConfig[$state] = array(
-        'titles' => array(),
-      );
-      foreach ($stateInfo['chambers'] as $chamber => $chamberInfo) {
-        if (empty($chamberInfo['title'])) {
-          continue;
-        }
-        $stateConfig[$state]['titles'][$chamber] = $chamberInfo['title'];
-      }
-
-      try {
-        $result = civicrm_api3('Setting', 'create', array('statelegemail_stateconfig' => $stateConfig));
-      }
-      catch (CiviCRM_API3_Exception $e) {
-        $error = $e->getMessage();
-        CRM_Core_Error::debug_log_message(t('API Error: %1', array(1 => $error, 'domain' => 'com.aghstrategies.statelegemail')));
-      }
-    }
-
-    return $stateConfig[$state];
   }
 
   /**
